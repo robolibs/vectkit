@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.5] - 2025-08-03
+
+### <!-- 4 -->⚡ Performance
+
+- Round altitude to nearest integer for WGS conversion
+
 ## [1.4.4] - 2025-08-03
 
 ### <!-- 0 -->⛰️  Features
