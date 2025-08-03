@@ -96,7 +96,7 @@ namespace geoson {
             return vector;
         }
 
-        void toFile(const std::filesystem::path &path, CRS outputCrs = CRS::ENU) const {
+        void toFile(const std::filesystem::path &path, CRS outputCrs = CRS::WGS) const {
             FeatureCollection fc;
             fc.datum = datum_;
             fc.heading = heading_;

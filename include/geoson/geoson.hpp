@@ -15,7 +15,7 @@ namespace geoson {
         WriteFeatureCollection(fc, outPath, outputCrs);
     }
 
-    // Write function alias - defaults to ENU output format (matches internal representation)
+    // Write function alias - defaults to WGS output format (for interoperability)
     // Note: Internal representation is always Point (ENU) coordinates
     inline void write(const FeatureCollection &fc, const std::filesystem::path &outPath) {
         WriteFeatureCollection(fc, outPath);

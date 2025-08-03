@@ -118,9 +118,9 @@ namespace geoson {
         ofs << j.dump(2) << "\n";
     }
 
-    /// write GeoJSON out to disk (pretty‐printed) - defaults to ENU output format
+    /// write GeoJSON out to disk (pretty‐printed) - defaults to WGS output format
     inline void WriteFeatureCollection(FeatureCollection const &fc, std::filesystem::path const &outPath) {
-        WriteFeatureCollection(fc, outPath, geoson::CRS::ENU);
+        WriteFeatureCollection(fc, outPath, geoson::CRS::WGS);
     }
 
 } // namespace geoson
