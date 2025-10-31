@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.7] - 2025-10-31
+
+### Build
+
+- Check for pre-existing nlohmann_json package before fetching
+
 ## [1.4.6] - 2025-08-03
 
 ### <!-- 1 -->🐛 Bug Fixes
