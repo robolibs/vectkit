@@ -42,6 +42,7 @@ set(SOURCES
     src/writter.cpp
     src/vector.cpp
     src/geoson.cpp
+    src/geoget.cpp
 )
 
 add_library(${project_name} ${SOURCES})
@@ -129,7 +130,7 @@ if(${project_name_upper}_ENABLE_TESTS)
   )
   FetchContent_MakeAvailable(DocTest)
 
-  file(GLOB test_src test/*.cpp)
+  file(GLOB test_src CONFIGURE_DEPENDS test/*.cpp)
 
   foreach(src_file IN LISTS test_src)
     get_filename_component(test_name "${src_file}" NAME_WE)
