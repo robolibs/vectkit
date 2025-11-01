@@ -2,6 +2,16 @@
 
 ## [2.0.0] - 2025-11-01
 
+### <!-- 2 -->🚜 Refactor
+
+- Refactor: Improve modularity and update build system
+
+### <!-- 7 -->⚙️ Miscellaneous Tasks
+
+- Bump project version to 1.4.7
+
+## [2.0.0] - 2025-11-01
+
 ### <!-- 0 -->⛰️  Features
 
 - Refactor polygon drawing to separate implementation from interface
