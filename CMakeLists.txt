@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_C_COMPILER "clang")
-set(CMAKE_CXX_COMPILER "clang++")# Use GCC 13 for compatibility
+# set(CMAKE_C_COMPILER "clang")
+# set(CMAKE_CXX_COMPILER "clang++")
 
 set(project_name geoson)
 project(${project_name} VERSION 2.0.0 LANGUAGES CXX)
