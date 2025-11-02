@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.1.0] - 2025-11-02
+
+### <!-- 0 -->⛰️  Features
+
+- Feat: Migrate JSON handling to Boost.JSON and update dependencies
+
+### Build
+
+- Refactor: Remove unused compiler settings
+- Add Makefile commands for configuration management
+
 ## [2.0.0] - 2025-11-01
 
 ### <!-- 2 -->🚜 Refactor

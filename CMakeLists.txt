@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 # set(CMAKE_CXX_COMPILER "clang++")
 
 set(project_name geoson)
-project(${project_name} VERSION 2.0.0 LANGUAGES CXX)
+project(${project_name} VERSION 2.1.0 LANGUAGES CXX)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 cmake_policy(SET CMP0074 NEW)
