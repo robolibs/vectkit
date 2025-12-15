@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.2.0] - 2025-12-15
+
+### <!-- 0 -->⛰️  Features
+
+- Refactor path representation to use `std::vector<Point>`
+
 ## [2.1.0] - 2025-11-02
 
 ### <!-- 0 -->⛰️  Features
