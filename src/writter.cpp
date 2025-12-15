@@ -37,10 +37,10 @@ namespace geoson {
                     coords.push_back(ptCoords(shape.getStart()));
                     coords.push_back(ptCoords(shape.getEnd()));
                     j["coordinates"] = std::move(coords);
-                } else if constexpr (std::is_same_v<T, concord::Path>) {
+                } else if constexpr (std::is_same_v<T, std::vector<concord::Point>>) {
                     j["type"] = "LineString";
                     boost::json::array arr;
-                    for (auto const &p : shape.getPoints())
+                    for (auto const &p : shape)
                         arr.push_back(ptCoords(p));
                     j["coordinates"] = std::move(arr);
                 } else if constexpr (std::is_same_v<T, concord::Polygon>) {

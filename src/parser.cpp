@@ -93,7 +93,7 @@ namespace geoson {
         if (pts.size() == 2)
             return concord::Line{pts[0], pts[1]};
         else
-            return concord::Path{pts};
+            return pts;
     }
 
     concord::Polygon parsePolygon(const json &coords, const concord::Datum &datum, geoson::CRS crs) {
@@ -212,7 +212,7 @@ namespace geoson {
                 os << "  POLYGON\n";
             } else if (std::get_if<concord::Line>(&v)) {
                 os << "  LINE\n";
-            } else if (std::get_if<concord::Path>(&v)) {
+            } else if (std::get_if<std::vector<concord::Point>>(&v)) {
                 os << "  PATH\n";
             } else if (std::get_if<concord::Point>(&v)) {
                 os << "   POINT\n";

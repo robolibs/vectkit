@@ -65,7 +65,7 @@ namespace geoson {
         void addLine(const concord::Line &line, const std::string &type = "line",
                      const std::unordered_map<std::string, std::string> &properties = {});
 
-        void addPath(const concord::Path &path, const std::string &type = "path",
+        void addPath(const std::vector<concord::Point> &path, const std::string &type = "path",
                      const std::unordered_map<std::string, std::string> &properties = {});
 
         void addPolygon(const concord::Polygon &polygon, const std::string &type = "polygon",

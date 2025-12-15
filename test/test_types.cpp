@@ -48,11 +48,10 @@ TEST_CASE("Types - Basic Geometry Variant") {
             concord::ENU enu = wgs.toENU(datum);
             points.emplace_back(enu.x, enu.y, enu.z);
         }
-        concord::Path path{points};
 
-        geoson::Geometry geom = path;
+        geoson::Geometry geom = points;
 
-        CHECK(std::holds_alternative<concord::Path>(geom));
+        CHECK(std::holds_alternative<std::vector<concord::Point>>(geom));
     }
 
     SUBCASE("Polygon geometry") {

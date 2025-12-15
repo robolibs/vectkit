@@ -10,7 +10,7 @@
 namespace geoson {
     // Internal geometry representation: all coordinates are stored as Point (ENU/local system)
     // Regardless of input CRS, coordinates are converted to local coordinate system during parsing
-    using Geometry = std::variant<concord::Point, concord::Line, concord::Path, concord::Polygon>;
+    using Geometry = std::variant<concord::Point, concord::Line, std::vector<concord::Point>, concord::Polygon>;
 
     // Simple CRS representation - used for input parsing and output formatting
     enum class CRS { WGS, ENU };

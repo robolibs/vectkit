@@ -136,7 +136,7 @@ namespace geoson {
         addElement(line, type, properties);
     }
 
-    void Vector::addPath(const concord::Path &path, const std::string &type,
+    void Vector::addPath(const std::vector<concord::Point> &path, const std::string &type,
                          const std::unordered_map<std::string, std::string> &properties) {
         addElement(path, type, properties);
     }
@@ -179,7 +179,7 @@ namespace geoson {
     std::vector<Element> Vector::getPaths() const {
         std::vector<Element> result;
         for (const auto &element : elements_) {
-            if (std::holds_alternative<concord::Path>(element.geometry)) {
+            if (std::holds_alternative<std::vector<concord::Point>>(element.geometry)) {
                 result.push_back(element);
             }
         }

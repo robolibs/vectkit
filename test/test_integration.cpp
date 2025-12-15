@@ -40,10 +40,9 @@ TEST_CASE("Integration - Round-trip conversion") {
         concord::ENU enu = wgs.toENU(datum);
         pathPoints.emplace_back(enu.x, enu.y, enu.z);
     }
-    concord::Path path{pathPoints};
     std::unordered_map<std::string, std::string> pathProps;
     pathProps["name"] = "test_path";
-    features.emplace_back(geoson::Feature{path, pathProps});
+    features.emplace_back(geoson::Feature{pathPoints, pathProps});
 
     // Polygon feature
     std::vector<concord::Point> polygonPoints;
@@ -81,7 +80,7 @@ TEST_CASE("Integration - Round-trip conversion") {
 
 TEST_CASE("Integration - Read existing GeoJSON file") {
     // This test assumes there's a test file in misc/
-    auto fc = geoson::ReadFeatureCollection("../misc/field4.geojson");
+    auto fc = geoson::ReadFeatureCollection("misc/field4.geojson");
 
     // Note: Internal representation is always Point coordinates, no CRS stored
     CHECK(fc.datum.lat == doctest::Approx(77.5));
@@ -96,7 +95,7 @@ TEST_CASE("Integration - Read existing GeoJSON file") {
 
 TEST_CASE("Integration - Modify and save") {
     // Load a file
-    auto fc = geoson::ReadFeatureCollection("../misc/field4.geojson");
+    auto fc = geoson::ReadFeatureCollection("misc/field4.geojson");
 
     // Modify the datum
     fc.datum.lat += 5.1;
