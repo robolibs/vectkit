@@ -85,37 +85,28 @@ package_end()
 
 -- Add required packages
 add_requires("concord")
-add_requires("boost", {system = true})
 
 if has_config("tests") then
     add_requires("doctest")
 end
 
--- Main library target
+-- Main library target (header-only)
 target("geoson")
-    set_kind("static")
-
-    -- Add source files
-    add_files("src/**.cpp")
+    set_kind("headeronly")
 
     -- Add header files
     add_headerfiles("include/(geoson/**.hpp)")
     add_headerfiles("include/(geoget/**.hpp)")
+    add_headerfiles("include/(json.hpp)")
     add_includedirs("include", {public = true})
 
     -- Link dependencies
-    add_packages("concord")
-    -- Explicitly link boost json components
-    add_linkdirs(path.join(os.getenv("CMAKE_PREFIX_PATH") or "", "lib"))
-    add_links("boost_json")
+    add_packages("concord", {public = true})
 
     -- Set install files
     add_installfiles("include/(geoson/**.hpp)")
     add_installfiles("include/(geoget/**.hpp)")
-    on_install(function (target)
-        local installdir = target:installdir()
-        os.cp(target:targetfile(), path.join(installdir, "lib", path.filename(target:targetfile())))
-    end)
+    add_installfiles("include/(json.hpp)")
 target_end()
 
 -- Examples (only build when geoson is the main project)
@@ -127,8 +118,6 @@ if has_config("examples") and os.projectdir() == os.curdir() then
             add_files(filepath)
             add_deps("geoson")
             add_packages("concord")
-            -- Link boost json components explicitly
-            add_links("boost_json")
             add_includedirs("include")
         target_end()
     end
@@ -143,8 +132,6 @@ if has_config("tests") and os.projectdir() == os.curdir() then
             add_files(filepath)
             add_deps("geoson")
             add_packages("concord", "doctest")
-            -- Link boost json components explicitly
-            add_links("boost_json")
             add_includedirs("include")
             add_defines("DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN")
 

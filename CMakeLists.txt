@@ -32,32 +32,20 @@ FetchContent_MakeAvailable(concord)
 list(APPEND ext_deps concord::concord)
 
 # --------------------------------------------------------------------------------------------------
-# Build library
-set(SOURCES
-    src/parser.cpp
-    src/writter.cpp
-    src/vector.cpp
-    src/geoson.cpp
-    src/geoget.cpp
-)
-
-add_library(${project_name} ${SOURCES})
+# Header-only library
+add_library(${project_name} INTERFACE)
 add_library(${project_name}::${project_name} ALIAS ${project_name})
 
 target_include_directories(${project_name} 
-    PUBLIC
+    INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(${project_name} PRIVATE ${ext_deps})
-
 # Export concord as a public dependency (headers use it)
-target_link_libraries(${project_name} PUBLIC concord::concord)
+target_link_libraries(${project_name} INTERFACE concord::concord)
 
-target_compile_options(${project_name} PRIVATE ${params})
-
-include_directories(include)
+target_compile_features(${project_name} INTERFACE cxx_std_20)
 
 # --------------------------------------------------------------------------------------------------
 include(GNUInstallDirs)
@@ -68,9 +56,6 @@ install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 # Install library and export targets
 install(TARGETS ${project_name} 
     EXPORT ${project_name}Targets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 # Install the export file so that `find_package(${project_name})` works

@@ -37,7 +37,7 @@ $(info ------------------------------------------)
 
 build:
 	@echo "Running clang-format on source files..."
-	@find ./src ./include -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | xargs clang-format -i
+	@find ./include -name "*.cpp" -o -name "*.hpp" -o -name "*.h" | xargs clang-format -i
 ifeq ($(BUILD_SYSTEM),xmake)
 	@xmake -j$(shell nproc) -y 2>&1 | tee "$(TOP_DIR)/.complog"
 	@grep "error:" "$(TOP_DIR)/.complog" > "$(TOP_DIR)/.quickfix" || true
