@@ -187,7 +187,7 @@ namespace geoson {
             return m;
         }
 
-        inline concord::Point parse_point(json_array_s *coords, const concord::Datum &datum, geoson::CRS crs) {
+        inline dp::Point parse_point(json_array_s *coords, const dp::Geo &datum, geoson::CRS crs) {
             if (!coords || coords->length < 2) {
                 throw std::runtime_error("Invalid point coordinates");
             }
@@ -201,16 +201,16 @@ namespace geoson {
             double z = z_elem ? get_number(z_elem->value) : 0.0;
 
             if (crs == geoson::CRS::ENU) {
-                return concord::Point{x, y, z};
+                return dp::Point{x, y, z};
             } else {
-                concord::WGS wgs{y, x, z};
-                concord::ENU enu = wgs.toENU(datum);
-                return concord::Point{enu.x, enu.y, enu.z};
+                concord::earth::WGS wgs{y, x, z};
+                auto enu = concord::frame::to_enu(datum, wgs);
+                return dp::Point{enu.east(), enu.north(), enu.up()};
             }
         }
 
-        inline Geometry parse_line_string(json_array_s *coords, const concord::Datum &datum, geoson::CRS crs) {
-            std::vector<concord::Point> pts;
+        inline Geometry parse_line_string(json_array_s *coords, const dp::Geo &datum, geoson::CRS crs) {
+            std::vector<dp::Point> pts;
             if (!coords)
                 return pts;
 
@@ -222,20 +222,20 @@ namespace geoson {
             }
 
             if (pts.size() == 2)
-                return concord::Line{pts[0], pts[1]};
+                return dp::Segment{pts[0], pts[1]};
             else
                 return pts;
         }
 
-        inline concord::Polygon parse_polygon(json_array_s *coords, const concord::Datum &datum, geoson::CRS crs) {
-            std::vector<concord::Point> pts;
+        inline dp::Polygon parse_polygon(json_array_s *coords, const dp::Geo &datum, geoson::CRS crs) {
+            std::vector<dp::Point> pts;
             if (!coords || !coords->start)
-                return concord::Polygon{pts};
+                return dp::Polygon{dp::Vector<dp::Point>{pts.begin(), pts.end()}};
 
             // Get the first ring (outer ring)
             auto *ring_arr = get_array(coords->start->value);
             if (!ring_arr)
-                return concord::Polygon{pts};
+                return dp::Polygon{dp::Vector<dp::Point>{pts.begin(), pts.end()}};
 
             for (auto *elem = ring_arr->start; elem; elem = elem->next) {
                 auto *pt_arr = get_array(elem->value);
@@ -244,10 +244,10 @@ namespace geoson {
                 }
             }
 
-            return concord::Polygon{pts};
+            return dp::Polygon{dp::Vector<dp::Point>{pts.begin(), pts.end()}};
         }
 
-        inline std::vector<Geometry> parse_geometry(json_object_s *geom, const concord::Datum &datum, geoson::CRS crs) {
+        inline std::vector<Geometry> parse_geometry(json_object_s *geom, const dp::Geo &datum, geoson::CRS crs) {
             std::vector<Geometry> out;
             if (!geom)
                 return out;
@@ -353,10 +353,10 @@ namespace geoson {
         auto *d0 = datum_arr->start;
         auto *d1 = d0->next;
         auto *d2 = d1->next;
-        concord::Datum d{detail::get_number(d0->value), detail::get_number(d1->value), detail::get_number(d2->value)};
+        dp::Geo d{detail::get_number(d0->value), detail::get_number(d1->value), detail::get_number(d2->value)};
 
         double yaw = detail::get_number(heading_elem->value);
-        concord::Euler euler{0.0, 0.0, yaw};
+        dp::Euler euler{0.0, 0.0, yaw};
 
         FeatureCollection fc;
         fc.datum = d;
@@ -405,19 +405,19 @@ namespace geoson {
     }
 
     inline std::ostream &operator<<(std::ostream &os, FeatureCollection const &fc) {
-        os << "DATUM: " << fc.datum.lat << ", " << fc.datum.lon << ", " << fc.datum.alt << "\n"
+        os << "DATUM: " << fc.datum.latitude << ", " << fc.datum.longitude << ", " << fc.datum.altitude << "\n"
            << "HEADING: " << fc.heading.yaw << "\n";
         os << "FEATURES: " << fc.features.size() << "\n";
 
         for (auto const &f : fc.features) {
             auto &v = f.geometry;
-            if (std::get_if<concord::Polygon>(&v)) {
+            if (std::get_if<dp::Polygon>(&v)) {
                 os << "  POLYGON\n";
-            } else if (std::get_if<concord::Line>(&v)) {
+            } else if (std::get_if<dp::Segment>(&v)) {
                 os << "  LINE\n";
-            } else if (std::get_if<std::vector<concord::Point>>(&v)) {
+            } else if (std::get_if<std::vector<dp::Point>>(&v)) {
                 os << "  PATH\n";
-            } else if (std::get_if<concord::Point>(&v)) {
+            } else if (std::get_if<dp::Point>(&v)) {
                 os << "   POINT\n";
             }
             if (f.properties.size() > 0)

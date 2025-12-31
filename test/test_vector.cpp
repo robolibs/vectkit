@@ -4,14 +4,15 @@
 #include <filesystem>
 #include <fstream>
 
+namespace dp = ::datapod;
+
 TEST_CASE("Vector - Basic Construction") {
-    concord::Datum datum{52.0, 5.0, 0.0};
-    concord::Euler heading{0, 0, 0.5};
+    dp::Geo datum{52.0, 5.0, 0.0};
+    dp::Euler heading{0, 0, 0.5};
 
     // Create field boundary polygon
-    std::vector<concord::Point> fieldPoints = {
-        {0.0, 0.0, 0.0}, {100.0, 0.0, 0.0}, {100.0, 100.0, 0.0}, {0.0, 100.0, 0.0}};
-    concord::Polygon fieldBoundary{fieldPoints};
+    dp::Polygon fieldBoundary{dp::Vector<dp::Point>{{dp::Point{0.0, 0.0, 0.0}, dp::Point{100.0, 0.0, 0.0},
+                                                     dp::Point{100.0, 100.0, 0.0}, dp::Point{0.0, 100.0, 0.0}}}};
 
     SUBCASE("Constructor with default parameters") {
         geoson::Vector vector(fieldBoundary);
@@ -24,21 +25,20 @@ TEST_CASE("Vector - Basic Construction") {
     SUBCASE("Constructor with all parameters") {
         geoson::Vector vector(fieldBoundary, datum, heading, geoson::CRS::WGS);
 
-        CHECK(vector.getDatum().lat == doctest::Approx(52.0));
-        CHECK(vector.getDatum().lon == doctest::Approx(5.0));
+        CHECK(vector.getDatum().latitude == doctest::Approx(52.0));
+        CHECK(vector.getDatum().longitude == doctest::Approx(5.0));
         CHECK(vector.getHeading().yaw == doctest::Approx(0.5));
         CHECK(vector.getCRS() == geoson::CRS::WGS);
     }
 }
 
 TEST_CASE("Vector - Element Management") {
-    std::vector<concord::Point> fieldPoints = {
-        {0.0, 0.0, 0.0}, {100.0, 0.0, 0.0}, {100.0, 100.0, 0.0}, {0.0, 100.0, 0.0}};
-    concord::Polygon fieldBoundary{fieldPoints};
+    dp::Polygon fieldBoundary{dp::Vector<dp::Point>{{dp::Point{0.0, 0.0, 0.0}, dp::Point{100.0, 0.0, 0.0},
+                                                     dp::Point{100.0, 100.0, 0.0}, dp::Point{0.0, 100.0, 0.0}}}};
     geoson::Vector vector(fieldBoundary);
 
     SUBCASE("Add and retrieve elements") {
-        concord::Point point{50.0, 50.0, 0.0};
+        dp::Point point{50.0, 50.0, 0.0};
         vector.addPoint(point, "waypoint", {{"id", "wp1"}});
 
         CHECK(vector.elementCount() == 1);
@@ -47,13 +47,13 @@ TEST_CASE("Vector - Element Management") {
         const auto &element = vector.getElement(0);
         CHECK(element.type == "waypoint");
         CHECK(element.properties.at("id") == "wp1");
-        CHECK(std::holds_alternative<concord::Point>(element.geometry));
+        CHECK(std::holds_alternative<dp::Point>(element.geometry));
     }
 
     SUBCASE("Add different geometry types") {
-        concord::Point point{25.0, 25.0, 0.0};
-        concord::Line line{{10.0, 10.0, 0.0}, {90.0, 90.0, 0.0}};
-        std::vector<concord::Point> pathPoints = {{20.0, 20.0, 0.0}, {40.0, 40.0, 0.0}, {60.0, 60.0, 0.0}};
+        dp::Point point{25.0, 25.0, 0.0};
+        dp::Segment line{{10.0, 10.0, 0.0}, {90.0, 90.0, 0.0}};
+        std::vector<dp::Point> pathPoints = {{20.0, 20.0, 0.0}, {40.0, 40.0, 0.0}, {60.0, 60.0, 0.0}};
 
         vector.addPoint(point, "marker");
         vector.addLine(line, "boundary");
@@ -97,8 +97,8 @@ TEST_CASE("Vector - Element Management") {
 }
 
 TEST_CASE("Vector - Field Management") {
-    std::vector<concord::Point> fieldPoints = {{0.0, 0.0, 0.0}, {50.0, 0.0, 0.0}, {50.0, 50.0, 0.0}, {0.0, 50.0, 0.0}};
-    concord::Polygon fieldBoundary{fieldPoints};
+    dp::Polygon fieldBoundary{dp::Vector<dp::Point>{
+        {dp::Point{0.0, 0.0, 0.0}, dp::Point{50.0, 0.0, 0.0}, dp::Point{50.0, 50.0, 0.0}, dp::Point{0.0, 50.0, 0.0}}}};
     geoson::Vector vector(fieldBoundary);
 
     SUBCASE("Field properties") {
@@ -115,22 +115,20 @@ TEST_CASE("Vector - Field Management") {
 
     SUBCASE("Field boundary") {
         const auto &boundary = vector.getFieldBoundary();
-        CHECK(boundary.getPoints().size() == 4);
+        CHECK(boundary.vertices.size() == 4);
 
-        std::vector<concord::Point> newPoints = {
-            {0.0, 0.0, 0.0}, {100.0, 0.0, 0.0}, {100.0, 100.0, 0.0}, {0.0, 100.0, 0.0}};
-        concord::Polygon newBoundary{newPoints};
+        dp::Polygon newBoundary{dp::Vector<dp::Point>{{dp::Point{0.0, 0.0, 0.0}, dp::Point{100.0, 0.0, 0.0},
+                                                       dp::Point{100.0, 100.0, 0.0}, dp::Point{0.0, 100.0, 0.0}}}};
         vector.setFieldBoundary(newBoundary);
 
-        CHECK(vector.getFieldBoundary().getPoints().size() == 4);
+        CHECK(vector.getFieldBoundary().vertices.size() == 4);
     }
 }
 
 TEST_CASE("Vector - File I/O") {
-    std::vector<concord::Point> fieldPoints = {
-        {0.0, 0.0, 0.0}, {100.0, 0.0, 0.0}, {100.0, 100.0, 0.0}, {0.0, 100.0, 0.0}};
-    concord::Polygon fieldBoundary{fieldPoints};
-    concord::Datum datum{52.0, 5.0, 0.0};
+    dp::Polygon fieldBoundary{dp::Vector<dp::Point>{{dp::Point{0.0, 0.0, 0.0}, dp::Point{100.0, 0.0, 0.0},
+                                                     dp::Point{100.0, 100.0, 0.0}, dp::Point{0.0, 100.0, 0.0}}}};
+    dp::Geo datum{52.0, 5.0, 0.0};
 
     geoson::Vector originalVector(fieldBoundary, datum);
     originalVector.setFieldProperty("name", "Test Field");
@@ -148,7 +146,7 @@ TEST_CASE("Vector - File I/O") {
         auto loadedVector = geoson::Vector::fromFile(testFile);
 
         CHECK(loadedVector.elementCount() == 2);
-        CHECK(loadedVector.getDatum().lat == doctest::Approx(52.0));
+        CHECK(loadedVector.getDatum().latitude == doctest::Approx(52.0));
         CHECK(loadedVector.getFieldProperties().at("name") == "Test Field");
 
         auto points = loadedVector.getPoints();
@@ -177,9 +175,8 @@ TEST_CASE("Vector - File I/O") {
 
 TEST_CASE("Vector - Error Handling") {
     SUBCASE("Out of range access") {
-        std::vector<concord::Point> fieldPoints = {
-            {0.0, 0.0, 0.0}, {10.0, 0.0, 0.0}, {10.0, 10.0, 0.0}, {0.0, 10.0, 0.0}};
-        concord::Polygon fieldBoundary{fieldPoints};
+        dp::Polygon fieldBoundary{dp::Vector<dp::Point>{{dp::Point{0.0, 0.0, 0.0}, dp::Point{10.0, 0.0, 0.0},
+                                                         dp::Point{10.0, 10.0, 0.0}, dp::Point{0.0, 10.0, 0.0}}}};
         geoson::Vector vector(fieldBoundary);
 
         CHECK_THROWS_AS(vector.getElement(0), std::out_of_range);
@@ -193,8 +190,8 @@ TEST_CASE("Vector - Error Handling") {
 }
 
 TEST_CASE("Vector - Iterators") {
-    std::vector<concord::Point> fieldPoints = {{0.0, 0.0, 0.0}, {10.0, 0.0, 0.0}, {10.0, 10.0, 0.0}, {0.0, 10.0, 0.0}};
-    concord::Polygon fieldBoundary{fieldPoints};
+    dp::Polygon fieldBoundary{dp::Vector<dp::Point>{
+        {dp::Point{0.0, 0.0, 0.0}, dp::Point{10.0, 0.0, 0.0}, dp::Point{10.0, 10.0, 0.0}, dp::Point{0.0, 10.0, 0.0}}}};
     geoson::Vector vector(fieldBoundary);
 
     vector.addPoint({1.0, 1.0, 0.0}, "p1");

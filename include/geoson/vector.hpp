@@ -23,12 +23,12 @@ namespace geoson {
 
     class Vector {
       private:
-        concord::Polygon field_boundary_;
+        dp::Polygon field_boundary_;
         std::unordered_map<std::string, std::string> field_properties_;
         std::vector<Element> elements_;
 
-        concord::Datum datum_;
-        concord::Euler heading_;
+        dp::Geo datum_;
+        dp::Euler heading_;
         CRS crs_;
 
         std::unordered_map<std::string, std::string> global_properties_;
@@ -36,9 +36,8 @@ namespace geoson {
       public:
         Vector() = delete;
 
-        explicit Vector(const concord::Polygon &field_boundary,
-                        const concord::Datum &datum = concord::Datum{0.001, 0.001, 1.0},
-                        const concord::Euler &heading = concord::Euler{0, 0, 0}, CRS crs = CRS::ENU)
+        explicit Vector(const dp::Polygon &field_boundary, const dp::Geo &datum = dp::Geo{0.001, 0.001, 1.0},
+                        const dp::Euler &heading = dp::Euler{0, 0, 0}, CRS crs = CRS::ENU)
             : field_boundary_(field_boundary), datum_(datum), heading_(heading), crs_(crs) {}
 
         static Vector fromFile(const std::filesystem::path &path) {
@@ -48,13 +47,13 @@ namespace geoson {
                 throw std::runtime_error("Vector::fromFile: No features found in file");
             }
 
-            std::optional<std::pair<concord::Polygon, std::unordered_map<std::string, std::string>>> field_data;
+            std::optional<std::pair<dp::Polygon, std::unordered_map<std::string, std::string>>> field_data;
 
             for (const auto &feature : fc.features) {
-                if (std::holds_alternative<concord::Polygon>(feature.geometry)) {
+                if (std::holds_alternative<dp::Polygon>(feature.geometry)) {
                     auto it = feature.properties.find("type");
                     if (it != feature.properties.end() && it->second == "field") {
-                        field_data = std::make_pair(std::get<concord::Polygon>(feature.geometry), feature.properties);
+                        field_data = std::make_pair(std::get<dp::Polygon>(feature.geometry), feature.properties);
                         break;
                     }
                 }
@@ -62,8 +61,8 @@ namespace geoson {
 
             if (!field_data) {
                 for (const auto &feature : fc.features) {
-                    if (std::holds_alternative<concord::Polygon>(feature.geometry)) {
-                        field_data = std::make_pair(std::get<concord::Polygon>(feature.geometry), feature.properties);
+                    if (std::holds_alternative<dp::Polygon>(feature.geometry)) {
+                        field_data = std::make_pair(std::get<dp::Polygon>(feature.geometry), feature.properties);
                         break;
                     }
                 }
@@ -111,9 +110,9 @@ namespace geoson {
             geoson::write(fc, path, outputCrs);
         }
 
-        const concord::Polygon &getFieldBoundary() const { return field_boundary_; }
+        const dp::Polygon &getFieldBoundary() const { return field_boundary_; }
 
-        void setFieldBoundary(const concord::Polygon &boundary) { field_boundary_ = boundary; }
+        void setFieldBoundary(const dp::Polygon &boundary) { field_boundary_ = boundary; }
 
         const std::unordered_map<std::string, std::string> &getFieldProperties() const { return field_properties_; }
 
@@ -154,22 +153,22 @@ namespace geoson {
             }
         }
 
-        void addPoint(const concord::Point &point, const std::string &type = "point",
+        void addPoint(const dp::Point &point, const std::string &type = "point",
                       const std::unordered_map<std::string, std::string> &properties = {}) {
             addElement(point, type, properties);
         }
 
-        void addLine(const concord::Line &line, const std::string &type = "line",
+        void addLine(const dp::Segment &line, const std::string &type = "line",
                      const std::unordered_map<std::string, std::string> &properties = {}) {
             addElement(line, type, properties);
         }
 
-        void addPath(const std::vector<concord::Point> &path, const std::string &type = "path",
+        void addPath(const std::vector<dp::Point> &path, const std::string &type = "path",
                      const std::unordered_map<std::string, std::string> &properties = {}) {
             addElement(path, type, properties);
         }
 
-        void addPolygon(const concord::Polygon &polygon, const std::string &type = "polygon",
+        void addPolygon(const dp::Polygon &polygon, const std::string &type = "polygon",
                         const std::unordered_map<std::string, std::string> &properties = {}) {
             addElement(polygon, type, properties);
         }
@@ -187,7 +186,7 @@ namespace geoson {
         std::vector<Element> getPoints() const {
             std::vector<Element> result;
             for (const auto &element : elements_) {
-                if (std::holds_alternative<concord::Point>(element.geometry)) {
+                if (std::holds_alternative<dp::Point>(element.geometry)) {
                     result.push_back(element);
                 }
             }
@@ -197,7 +196,7 @@ namespace geoson {
         std::vector<Element> getLines() const {
             std::vector<Element> result;
             for (const auto &element : elements_) {
-                if (std::holds_alternative<concord::Line>(element.geometry)) {
+                if (std::holds_alternative<dp::Segment>(element.geometry)) {
                     result.push_back(element);
                 }
             }
@@ -207,7 +206,7 @@ namespace geoson {
         std::vector<Element> getPaths() const {
             std::vector<Element> result;
             for (const auto &element : elements_) {
-                if (std::holds_alternative<std::vector<concord::Point>>(element.geometry)) {
+                if (std::holds_alternative<std::vector<dp::Point>>(element.geometry)) {
                     result.push_back(element);
                 }
             }
@@ -217,7 +216,7 @@ namespace geoson {
         std::vector<Element> getPolygons() const {
             std::vector<Element> result;
             for (const auto &element : elements_) {
-                if (std::holds_alternative<concord::Polygon>(element.geometry)) {
+                if (std::holds_alternative<dp::Polygon>(element.geometry)) {
                     result.push_back(element);
                 }
             }
@@ -235,13 +234,13 @@ namespace geoson {
             return result;
         }
 
-        const concord::Datum &getDatum() const { return datum_; }
+        const dp::Geo &getDatum() const { return datum_; }
 
-        void setDatum(const concord::Datum &datum) { datum_ = datum; }
+        void setDatum(const dp::Geo &datum) { datum_ = datum; }
 
-        const concord::Euler &getHeading() const { return heading_; }
+        const dp::Euler &getHeading() const { return heading_; }
 
-        void setHeading(const concord::Euler &heading) { heading_ = heading; }
+        void setHeading(const dp::Euler &heading) { heading_ = heading; }
 
         CRS getCRS() const { return crs_; }
 

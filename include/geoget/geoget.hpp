@@ -1,7 +1,8 @@
 #pragma once
 
-#include "concord/concord.hpp"
 #include "json.hpp"
+#include <concord/concord.hpp>
+#include <datapod/datapod.hpp>
 
 #include <arpa/inet.h>
 #include <condition_variable>
@@ -17,6 +18,8 @@
 #include <thread>
 #include <unistd.h>
 #include <vector>
+
+namespace dp = ::datapod;
 
 namespace geoget {
 
@@ -84,7 +87,7 @@ namespace geoget {
         std::mutex done_mutex;
         std::condition_variable done_cv;
         bool single_point_mode;
-        concord::Datum datum;
+        dp::Geo datum;
         bool select_point;
 
         std::string get_html() {
@@ -537,16 +540,16 @@ namespace geoget {
         }
 
         void set_datum_from_point(const Point &point) {
-            datum.lat = point.lat;
-            datum.lon = point.lon;
-            datum.alt = 0.0;
+            datum.latitude = point.lat;
+            datum.longitude = point.lon;
+            datum.altitude = 0.0;
         }
 
       public:
         PolygonDrawer(bool select_point = false)
             : server_fd(-1), is_done(false), single_point_mode(false), select_point(select_point) {}
 
-        PolygonDrawer(const concord::Datum &d)
+        PolygonDrawer(const dp::Geo &d)
             : server_fd(-1), is_done(false), single_point_mode(false), datum(d), select_point(false) {}
 
         ~PolygonDrawer() { stop(); }
@@ -597,7 +600,7 @@ namespace geoget {
             }
         }
 
-        concord::Datum add_datum() {
+        dp::Geo add_datum() {
             single_point_mode = true;
 
             {
@@ -626,16 +629,16 @@ namespace geoget {
             stop();
 
             if (!points.empty()) {
-                datum.lat = points[0].lat;
-                datum.lon = points[0].lon;
-                datum.alt = 0.0;
-                std::cout << "Datum set to: " << datum.lat << ", " << datum.lon << std::endl;
+                datum.latitude = points[0].lat;
+                datum.longitude = points[0].lon;
+                datum.altitude = 0.0;
+                std::cout << "Datum set to: " << datum.latitude << ", " << datum.longitude << std::endl;
             }
 
             return datum;
         }
 
-        concord::Datum get_datum() { return datum; }
+        dp::Geo get_datum() { return datum; }
 
         const std::vector<std::vector<Point>> &get_all_polygons() {
             collect_points();
@@ -647,7 +650,7 @@ namespace geoget {
             return all_single_points;
         }
 
-        std::vector<concord::Polygon> get_polygons() {
+        std::vector<dp::Polygon> get_polygons() {
             collect_points();
             if (!datum.is_set()) {
                 if (select_point) {
@@ -656,24 +659,27 @@ namespace geoget {
                     set_datum_from_point(all_single_points[0]);
                 }
             }
-            std::vector<concord::Polygon> concord_polygons;
+            std::vector<dp::Polygon> polygons;
             for (const auto &polygon : all_polygons) {
-                concord::Polygon concord_polygon;
+                dp::Polygon dp_polygon;
                 for (const auto &point : polygon) {
-                    auto [x, y, z] = concord::gps_to_enu(point.lat, point.lon, 0.0, datum.lat, datum.lon, datum.alt);
-                    concord_polygon.addPoint(concord::Point{x, y, z});
+                    concord::earth::WGS wgs{point.lat, point.lon, 0.0};
+                    auto enu = concord::frame::to_enu(datum, wgs);
+                    double x = enu.east(), y = enu.north(), z = enu.up();
+                    dp_polygon.vertices.push_back(dp::Point{x, y, z});
                 }
                 if (polygon.size() >= 3) {
-                    auto [x, y, z] =
-                        concord::gps_to_enu(polygon[0].lat, polygon[0].lon, 0.0, datum.lat, datum.lon, datum.alt);
-                    concord_polygon.addPoint(concord::Point{x, y, z});
+                    concord::earth::WGS wgs{polygon[0].lat, polygon[0].lon, 0.0};
+                    auto enu = concord::frame::to_enu(datum, wgs);
+                    double x = enu.east(), y = enu.north(), z = enu.up();
+                    dp_polygon.vertices.push_back(dp::Point{x, y, z});
                 }
-                concord_polygons.push_back(concord_polygon);
+                polygons.push_back(dp_polygon);
             }
-            return concord_polygons;
+            return polygons;
         }
 
-        std::vector<concord::Point> get_points() {
+        std::vector<dp::Point> get_points() {
             collect_single_point();
             if (!datum.is_set()) {
                 if (select_point) {
@@ -682,12 +688,14 @@ namespace geoget {
                     set_datum_from_point(all_single_points[0]);
                 }
             }
-            std::vector<concord::Point> concord_points;
+            std::vector<dp::Point> dp_points;
             for (const auto &point : all_single_points) {
-                auto [x, y, z] = concord::gps_to_enu(point.lat, point.lon, 0.0, datum.lat, datum.lon, datum.alt);
-                concord_points.emplace_back(x, y, z);
+                concord::earth::WGS wgs{point.lat, point.lon, 0.0};
+                auto enu = concord::frame::to_enu(datum, wgs);
+                double x = enu.east(), y = enu.north(), z = enu.up();
+                dp_points.emplace_back(x, y, z);
             }
-            return concord_points;
+            return dp_points;
         }
     };
 

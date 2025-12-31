@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <fstream>
 
+namespace dp = ::datapod;
+
 TEST_CASE("Parser - Properties parsing through file") {
     const std::string test_file_content = R"({
         "type": "FeatureCollection",
@@ -72,7 +74,7 @@ TEST_CASE("Parser - Different geometry types") {
 
         auto fc = geoson::ReadFeatureCollection(test_file);
         CHECK(fc.features.size() == 1);
-        CHECK(std::holds_alternative<concord::Point>(fc.features[0].geometry));
+        CHECK(std::holds_alternative<dp::Point>(fc.features[0].geometry));
 
         std::filesystem::remove(test_file);
     }
@@ -104,7 +106,7 @@ TEST_CASE("Parser - Different geometry types") {
 
         auto fc = geoson::ReadFeatureCollection(test_file);
         CHECK(fc.features.size() == 1);
-        CHECK(std::holds_alternative<concord::Line>(fc.features[0].geometry));
+        CHECK(std::holds_alternative<dp::Segment>(fc.features[0].geometry));
 
         std::filesystem::remove(test_file);
     }
@@ -136,7 +138,7 @@ TEST_CASE("Parser - Different geometry types") {
 
         auto fc = geoson::ReadFeatureCollection(test_file);
         CHECK(fc.features.size() == 1);
-        CHECK(std::holds_alternative<concord::Polygon>(fc.features[0].geometry));
+        CHECK(std::holds_alternative<dp::Polygon>(fc.features[0].geometry));
 
         std::filesystem::remove(test_file);
     }
@@ -173,14 +175,14 @@ TEST_CASE("Parser - File operations") {
 
         auto fc = geoson::ReadFeatureCollection(test_file);
 
-        CHECK(fc.datum.lat == doctest::Approx(52.0));
-        CHECK(fc.datum.lon == doctest::Approx(5.0));
-        CHECK(fc.datum.alt == doctest::Approx(0.0));
+        CHECK(fc.datum.latitude == doctest::Approx(52.0));
+        CHECK(fc.datum.longitude == doctest::Approx(5.0));
+        CHECK(fc.datum.altitude == doctest::Approx(0.0));
         CHECK(fc.heading.yaw == doctest::Approx(2.0));
         CHECK(fc.features.size() == 1);
 
         const auto &feature = fc.features[0];
-        CHECK(std::holds_alternative<concord::Point>(feature.geometry));
+        CHECK(std::holds_alternative<dp::Point>(feature.geometry));
         CHECK(feature.properties.at("name") == "test_point");
 
         std::filesystem::remove(test_file);

@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 
+namespace dp = ::datapod;
+
 TEST_CASE("CRS conversion during output") {
     // Create a simple test GeoJSON with WGS coordinates
     const std::string test_geojson_str = R"({
@@ -36,7 +38,7 @@ TEST_CASE("CRS conversion during output") {
         CHECK(fc.features.size() == 1);
 
         // Internal representation should be in Point coordinates
-        auto *point = std::get_if<concord::Point>(&fc.features[0].geometry);
+        auto *point = std::get_if<dp::Point>(&fc.features[0].geometry);
         REQUIRE(point != nullptr);
 
         // The coordinates should have been converted from WGS to ENU/Point coordinates
@@ -56,8 +58,8 @@ TEST_CASE("CRS conversion during output") {
         auto fc_enu = geoson::read("test_output_enu.geojson");
 
         // Both should have the same internal representation after parsing
-        auto *point_wgs = std::get_if<concord::Point>(&fc_wgs.features[0].geometry);
-        auto *point_enu = std::get_if<concord::Point>(&fc_enu.features[0].geometry);
+        auto *point_wgs = std::get_if<dp::Point>(&fc_wgs.features[0].geometry);
+        auto *point_enu = std::get_if<dp::Point>(&fc_enu.features[0].geometry);
         REQUIRE(point_wgs != nullptr);
         REQUIRE(point_enu != nullptr);
 

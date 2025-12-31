@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <fstream>
 
+namespace dp = ::datapod;
+
 TEST_CASE("Error Handling - Invalid JSON") {
     const std::filesystem::path test_file = "/tmp/invalid.geojson";
 
@@ -265,8 +267,8 @@ TEST_CASE("Error Handling - File I/O errors") {
     }
 
     SUBCASE("WriteFeatureCollection - invalid directory") {
-        concord::Datum datum{52.0, 5.0, 0.0};
-        concord::Euler heading{0.0, 0.0, 0.0};
+        dp::Geo datum{52.0, 5.0, 0.0};
+        dp::Euler heading{0.0, 0.0, 0.0};
         std::vector<geoson::Feature> features;
 
         geoson::FeatureCollection fc{datum, heading, std::move(features), {}};

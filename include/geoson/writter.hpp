@@ -60,14 +60,14 @@ namespace geoson {
         }
     } // namespace detail
 
-    inline std::string geometryToJson(Geometry const &geom, const concord::Datum &datum, geoson::CRS outputCrs) {
-        auto ptCoords = [&](concord::Point const &p) -> std::string {
+    inline std::string geometryToJson(Geometry const &geom, const dp::Geo &datum, geoson::CRS outputCrs) {
+        auto ptCoords = [&](dp::Point const &p) -> std::string {
             if (outputCrs == geoson::CRS::ENU) {
                 return detail::coords_to_json(p.x, p.y, p.z);
             } else {
-                concord::ENU enu{p, datum};
-                concord::WGS wgs = enu.toWGS();
-                return detail::coords_to_json(wgs.lon, wgs.lat, wgs.alt, true);
+                concord::frame::ENU enu{p, datum};
+                auto wgs = concord::frame::to_wgs(enu);
+                return detail::coords_to_json(wgs.longitude, wgs.latitude, wgs.altitude, true);
             }
         };
 
@@ -76,12 +76,12 @@ namespace geoson {
                 using T = std::decay_t<decltype(shape)>;
                 std::ostringstream oss;
 
-                if constexpr (std::is_same_v<T, concord::Point>) {
+                if constexpr (std::is_same_v<T, dp::Point>) {
                     oss << R"({"type":"Point","coordinates":)" << ptCoords(shape) << "}";
-                } else if constexpr (std::is_same_v<T, concord::Line>) {
-                    oss << R"({"type":"LineString","coordinates":[)" << ptCoords(shape.getStart()) << ","
-                        << ptCoords(shape.getEnd()) << "]}";
-                } else if constexpr (std::is_same_v<T, std::vector<concord::Point>>) {
+                } else if constexpr (std::is_same_v<T, dp::Segment>) {
+                    oss << R"({"type":"LineString","coordinates":[)" << ptCoords(shape.start) << ","
+                        << ptCoords(shape.end) << "]}";
+                } else if constexpr (std::is_same_v<T, std::vector<dp::Point>>) {
                     oss << R"({"type":"LineString","coordinates":[)";
                     bool first = true;
                     for (auto const &p : shape) {
@@ -91,10 +91,10 @@ namespace geoson {
                         oss << ptCoords(p);
                     }
                     oss << "]}";
-                } else if constexpr (std::is_same_v<T, concord::Polygon>) {
+                } else if constexpr (std::is_same_v<T, dp::Polygon>) {
                     oss << R"({"type":"Polygon","coordinates":[[)";
                     bool first = true;
-                    for (auto const &p : shape.getPoints()) {
+                    for (auto const &p : shape.vertices) {
                         if (!first)
                             oss << ",";
                         first = false;
@@ -107,7 +107,7 @@ namespace geoson {
             geom);
     }
 
-    inline std::string featureToJson(Feature const &f, const concord::Datum &datum, geoson::CRS outputCrs) {
+    inline std::string featureToJson(Feature const &f, const dp::Geo &datum, geoson::CRS outputCrs) {
         std::ostringstream oss;
         oss << R"({"type":"Feature","properties":{)";
 
@@ -135,8 +135,8 @@ namespace geoson {
         }
 
         // Datum
-        oss << "," << R"("datum":[)" << std::setprecision(15) << fc.datum.lat << "," << fc.datum.lon << ","
-            << fc.datum.alt << "]";
+        oss << "," << R"("datum":[)" << std::setprecision(15) << fc.datum.latitude << "," << fc.datum.longitude << ","
+            << fc.datum.altitude << "]";
 
         // Heading
         oss << "," << R"("heading":)" << std::setprecision(15) << fc.heading.yaw;

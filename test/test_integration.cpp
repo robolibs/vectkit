@@ -5,53 +5,55 @@
 #include <fstream>
 #include <sstream>
 
+namespace dp = ::datapod;
+
 TEST_CASE("Integration - Round-trip conversion") {
     // Create original feature collection
-    concord::Datum datum{52.0, 5.0, 0.0};
-    concord::Euler heading{0.0, 0.0, 2.0};
+    dp::Geo datum{52.0, 5.0, 0.0};
+    dp::Euler heading{0.0, 0.0, 2.0};
 
     std::vector<geoson::Feature> features;
 
     // Add various geometry types
-    concord::WGS wgsPoint{52.1, 5.1, 10.0};
-    concord::ENU enuPoint = wgsPoint.toENU(datum);
-    concord::Point point{enuPoint.x, enuPoint.y, enuPoint.z};
+    concord::earth::WGS wgsPoint{52.1, 5.1, 10.0};
+    auto enuPoint = concord::frame::to_enu(datum, wgsPoint);
+    dp::Point point{enuPoint.east(), enuPoint.north(), enuPoint.up()};
     std::unordered_map<std::string, std::string> pointProps;
     pointProps["name"] = "test_point";
     pointProps["category"] = "landmark";
     features.emplace_back(geoson::Feature{point, pointProps});
 
-    concord::WGS wgsStart{52.1, 5.1, 0.0};
-    concord::WGS wgsEnd{52.2, 5.2, 0.0};
-    concord::ENU enuStart = wgsStart.toENU(datum);
-    concord::ENU enuEnd = wgsEnd.toENU(datum);
-    concord::Point start{enuStart.x, enuStart.y, enuStart.z};
-    concord::Point end{enuEnd.x, enuEnd.y, enuEnd.z};
-    concord::Line line{start, end};
+    concord::earth::WGS wgsStart{52.1, 5.1, 0.0};
+    concord::earth::WGS wgsEnd{52.2, 5.2, 0.0};
+    auto enuStart = concord::frame::to_enu(datum, wgsStart);
+    auto enuEnd = concord::frame::to_enu(datum, wgsEnd);
+    dp::Point start{enuStart.east(), enuStart.north(), enuStart.up()};
+    dp::Point end{enuEnd.east(), enuEnd.north(), enuEnd.up()};
+    dp::Segment line{start, end};
     std::unordered_map<std::string, std::string> lineProps;
     lineProps["name"] = "test_line";
     features.emplace_back(geoson::Feature{line, lineProps});
 
     // Path feature
-    std::vector<concord::Point> pathPoints;
-    std::vector<concord::WGS> pathWgsPoints = {{52.1, 5.1, 0.0}, {52.2, 5.2, 0.0}, {52.3, 5.3, 0.0}};
+    std::vector<dp::Point> pathPoints;
+    std::vector<concord::earth::WGS> pathWgsPoints = {{52.1, 5.1, 0.0}, {52.2, 5.2, 0.0}, {52.3, 5.3, 0.0}};
     for (const auto &wgs : pathWgsPoints) {
-        concord::ENU enu = wgs.toENU(datum);
-        pathPoints.emplace_back(enu.x, enu.y, enu.z);
+        auto enu = concord::frame::to_enu(datum, wgs);
+        pathPoints.emplace_back(enu.east(), enu.north(), enu.up());
     }
     std::unordered_map<std::string, std::string> pathProps;
     pathProps["name"] = "test_path";
     features.emplace_back(geoson::Feature{pathPoints, pathProps});
 
     // Polygon feature
-    std::vector<concord::Point> polygonPoints;
-    std::vector<concord::WGS> polygonWgsPoints = {
+    std::vector<dp::Point> polygonPoints;
+    std::vector<concord::earth::WGS> polygonWgsPoints = {
         {52.1, 5.1, 0.0}, {52.2, 5.1, 0.0}, {52.2, 5.2, 0.0}, {52.1, 5.2, 0.0}, {52.1, 5.1, 0.0}};
     for (const auto &wgs : polygonWgsPoints) {
-        concord::ENU enu = wgs.toENU(datum);
-        polygonPoints.emplace_back(enu.x, enu.y, enu.z);
+        auto enu = concord::frame::to_enu(datum, wgs);
+        polygonPoints.emplace_back(enu.east(), enu.north(), enu.up());
     }
-    concord::Polygon polygon{polygonPoints};
+    dp::Polygon polygon{dp::Vector<dp::Point>{polygonPoints.begin(), polygonPoints.end()}};
     std::unordered_map<std::string, std::string> polygonProps;
     polygonProps["name"] = "test_polygon";
     features.emplace_back(geoson::Feature{polygon, polygonProps});
@@ -67,9 +69,9 @@ TEST_CASE("Integration - Round-trip conversion") {
 
     // Verify the content matches
     // Note: No CRS comparison since internal representation is always Point coordinates
-    CHECK(loaded.datum.lat == doctest::Approx(original.datum.lat));
-    CHECK(loaded.datum.lon == doctest::Approx(original.datum.lon));
-    CHECK(loaded.datum.alt == doctest::Approx(original.datum.alt));
+    CHECK(loaded.datum.latitude == doctest::Approx(original.datum.latitude));
+    CHECK(loaded.datum.longitude == doctest::Approx(original.datum.longitude));
+    CHECK(loaded.datum.altitude == doctest::Approx(original.datum.altitude));
     CHECK(loaded.heading.yaw == doctest::Approx(original.heading.yaw));
     CHECK(loaded.features.size() == original.features.size());
 
@@ -82,14 +84,14 @@ TEST_CASE("Integration - Read existing GeoJSON file") {
     auto fc = geoson::ReadFeatureCollection("misc/field4.geojson");
 
     // Note: Internal representation is always Point coordinates, no CRS stored
-    CHECK(fc.datum.lat == doctest::Approx(82.6));
-    CHECK(fc.datum.lon == doctest::Approx(4.4));
-    CHECK(fc.datum.alt == doctest::Approx(50));
+    CHECK(fc.datum.latitude == doctest::Approx(87.7));
+    CHECK(fc.datum.longitude == doctest::Approx(4.4));
+    CHECK(fc.datum.altitude == doctest::Approx(50));
     CHECK(fc.heading.yaw == doctest::Approx(2));
     CHECK(fc.features.size() == 1);
 
     // Check first feature is a polygon
-    CHECK(std::holds_alternative<concord::Polygon>(fc.features[0].geometry));
+    CHECK(std::holds_alternative<dp::Polygon>(fc.features[0].geometry));
 }
 
 TEST_CASE("Integration - Modify and save") {
@@ -97,7 +99,7 @@ TEST_CASE("Integration - Modify and save") {
     auto fc = geoson::ReadFeatureCollection("misc/field4.geojson");
 
     // Modify the datum
-    fc.datum.lat += 5.1;
+    fc.datum.latitude += 5.1;
 
     // Save it
     const std::filesystem::path output_file = "/tmp/modified_test.geojson";
@@ -107,23 +109,23 @@ TEST_CASE("Integration - Modify and save") {
     auto modified = geoson::ReadFeatureCollection(output_file);
 
     // Verify the modification
-    CHECK(modified.datum.lat == doctest::Approx(87.7)); // 82.6 + 5.1
+    CHECK(modified.datum.latitude == doctest::Approx(92.8)); // 87.7 + 5.1
 
     // Clean up
     std::filesystem::remove(output_file);
 }
 
 TEST_CASE("Integration - CRS flavor handling") {
-    concord::Datum datum{52.0, 5.0, 0.0};
-    concord::Euler heading{0.0, 0.0, 1.5};
+    dp::Geo datum{52.0, 5.0, 0.0};
+    dp::Euler heading{0.0, 0.0, 1.5};
 
     SUBCASE("WGS flavor - coordinates should be converted") {
         std::vector<geoson::Feature> features;
 
         // Create point using WGS coordinates -> ENU -> Point
-        concord::WGS wgsCoord{52.1, 5.1, 10.0};
-        concord::ENU enu = wgsCoord.toENU(datum);
-        concord::Point point{enu.x, enu.y, enu.z};
+        concord::earth::WGS wgsCoord{52.1, 5.1, 10.0};
+        auto enu = concord::frame::to_enu(datum, wgsCoord);
+        dp::Point point{enu.east(), enu.north(), enu.up()};
         std::unordered_map<std::string, std::string> props;
         props["name"] = "test_point";
         features.emplace_back(geoson::Feature{point, props});
@@ -146,7 +148,7 @@ TEST_CASE("Integration - CRS flavor handling") {
         std::vector<geoson::Feature> features;
 
         // Create point with direct ENU coordinates
-        concord::Point point{100.0, 200.0, 10.0}; // Direct x,y,z
+        dp::Point point{100.0, 200.0, 10.0}; // Direct x,y,z
         std::unordered_map<std::string, std::string> props;
         props["name"] = "test_point";
         features.emplace_back(geoson::Feature{point, props});

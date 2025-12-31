@@ -10,9 +10,9 @@ int main() {
         std::cout << fc << "\n";
 
         // 3) Tweak the datum (for example bump the latitude by +0.1°)
-        fc.datum.lat += 5.1;
-        std::cout << "After tweak, new datum is: " << fc.datum.lat << ", " << fc.datum.lon << ", " << fc.datum.alt
-                  << "\n";
+        fc.datum.latitude += 5.1;
+        std::cout << "After tweak, new datum is: " << fc.datum.latitude << ", " << fc.datum.longitude << ", "
+                  << fc.datum.altitude << "\n";
 
         // 4) Save back out
         geoson::write(fc, "misc/field4.geojson");
