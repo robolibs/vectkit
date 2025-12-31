@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.0.2] - 2025-12-31
+
+### <!-- 0 -->⛰️  Features
+
+- Revamp build system and refactor Geo/Datum types
+- Convert to header-only library and refactor GeoJSON parsing
+- Replace Boost.JSON with sheredom/json.h
+
+### <!-- 1 -->🐛 Bug Fixes
+
+- Update project version and define PROJECT_DIR
+
+### <!-- 7 -->⚙️ Miscellaneous Tasks
+
+- Update dependencies and improve SIMD configuration
+- Refactor build system and remove unused dependencies
+
+### Build
+
+- Update dev environment for new test architecture
+
 ## [2.2.0] - 2025-12-15
 
 ### <!-- 0 -->⛰️  Features
