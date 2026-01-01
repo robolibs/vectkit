@@ -22,7 +22,7 @@ int main() {
     rec->log("", rerun::Clear::RECURSIVE);
     rec->log_with_static("", true, rerun::Clear::RECURSIVE);
 
-    auto wgs_file = gs::read(PROJECT_DIR "/misc/field4.geojson");
+    auto wgs_file = gs::read(PROJECT_DIR "/misc/field4_enu.geojson");
 
     dp::Vector<dp::Point> points;
 
