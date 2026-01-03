@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.3] - 2026-01-03
+
+### <!-- 3 -->📚 Documentation
+
+- Documentations
+
+### <!-- 7 -->⚙️ Miscellaneous Tasks
+
+- Update dependency versions
+- Add visualizer for ENU GeoJSON data
+- Add Rerun visualization for WGS conversion
+
 ## [0.0.2] - 2025-12-31
 
 ### <!-- 0 -->⛰️  Features
