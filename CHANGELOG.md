@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.4] - 2026-01-16
+
+### <!-- 0 -->⛰️  Features
+
+- Update compile_commands.json for improved build
+
+### <!-- 7 -->⚙️ Miscellaneous Tasks
+
+- Update external dependencies and build system
+
 ## [0.0.3] - 2026-01-03
 
 ### <!-- 3 -->📚 Documentation
