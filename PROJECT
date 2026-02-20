@@ -18,8 +18,8 @@
 # Lines starting with # are comments
 # ==============================================================================
 
-geoson
-0.0.6
+vectkit
+0.0.7
 
 [lib]
 datapod|https://github.com/robolibs/datapod.git|0.0.41
